@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>关键信息体检报告 · MKTer 小V</title>
+<!--
+  数据驱动交互式体检报告页。render-report.mjs 注入 window.REPORT_DATA。
+  视觉系统继承 brand/templates/交易物落地页-模板.html（暖编辑风，baoyu-design 设计系统）。
+  无 REPORT_DATA 时回落到内置虚构默认（络平宁），保证单独打开也能看。
+-->
+<style>
+:root{
+  --bg:#FAF8F0; --card:#fff; --ink:#2C3E50; --mut:#5b6b7a; --faint:#9aa3ab;
+  --line:#ece6d8; --accent:#E8943A; --accent-deep:#c9761f; --accent-soft:#fbf0dd;
+  --agent:#5B8DB8; --agent-soft:#e9f1f7; --bad:#C0552F; --bad-soft:#f7e9e2; --ok:#5a8a4e; --ok-soft:#e7f1e3;
+  --r:16px; --shadow:0 2px 4px rgba(44,62,80,.04),0 6px 24px rgba(44,62,80,.06);
+  --maxw:880px; --titlefont:"PingFang SC","Songti SC",serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Helvetica Neue",sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.78;-webkit-font-smoothing:antialiased;padding-bottom:70px}
+.tnum{font-variant-numeric:tabular-nums}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+/* IP 角标（右上） */
+.iptag{position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:8px;z-index:5}
+.iptag .dot{width:9px;height:9px;border-radius:50%;background:var(--agent);box-shadow:0 0 0 4px var(--agent-soft)}
+.iptag .tx{text-align:right;line-height:1.25}
+.iptag .tx b{display:block;font-size:12.5px;font-weight:800;color:var(--ink)}
+.iptag .tx span{display:block;font-size:10px;color:var(--faint);letter-spacing:.02em}
+
+/* hero / 元数据条 */
+.hero{position:relative;padding:74px 0 8px}
+.kicker{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--accent-deep);
+  background:var(--accent-soft);border-radius:999px;padding:5px 13px;letter-spacing:.04em}
+.hero h1{font-family:var(--titlefont);font-size:34px;font-weight:800;line-height:1.2;margin:16px 0 0;letter-spacing:-.01em}
+.metabar{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.metabar span{font-size:12px;color:var(--mut);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.metabar span b{color:var(--ink);font-weight:700}
+
+/* section */
+.sec{padding:30px 0;border-top:1px solid var(--line)}
+.sec-k{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--accent-deep);text-transform:uppercase;margin-bottom:6px}
+.sec h2{font-family:var(--titlefont);font-size:23px;font-weight:800;line-height:1.3}
+.sec .sub{font-size:14.5px;color:var(--mut);margin-top:7px;max-width:42em}
+
+/* 评级（结论先行） */
+.verdict{margin-top:18px;display:flex;align-items:center;gap:20px;background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:24px 26px;box-shadow:var(--shadow)}
+.verdict .badge{flex:none;font-family:var(--titlefont);font-size:30px;font-weight:800;line-height:1;
+  padding:16px 22px;border-radius:14px;text-align:center;white-space:nowrap}
+.v-bad{background:var(--bad-soft);color:var(--bad)} .v-pass{background:#eef0ec;color:var(--mut)}
+.v-good{background:var(--accent-soft);color:var(--accent-deep)} .v-top{background:var(--ok-soft);color:var(--ok)}
+.verdict .diag{font-size:16.5px;color:var(--ink);font-weight:600;line-height:1.65}
+
+/* 逐条挑刺 accordion */
+.flaws{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.flaw{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.flaw.cmp{border-color:#e7c6b8}
+.flaw summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;gap:12px}
+.flaw summary::-webkit-details-marker{display:none}
+.flaw .qmark{flex:none;width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent-deep);
+  display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.flaw.cmp .qmark{background:var(--bad-soft);color:var(--bad)}
+.flaw .quote{font-size:15.5px;font-weight:700;color:var(--ink);flex:1}
+.flaw .quote .q{color:var(--bad)}
+.flaw .tagm{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:3px 9px;border-radius:999px;
+  background:var(--bad-soft);color:var(--bad)}
+.flaw .chev{flex:none;color:var(--faint);font-size:13px;transition:.2s}
+.flaw[open] .chev{transform:rotate(90deg)}
+.flaw .detail{padding:0 20px 18px 56px;display:grid;gap:10px}
+.flaw .detail .row{font-size:14px;line-height:1.7}
+.flaw .detail .lab{display:inline-block;min-width:6.5em;color:var(--accent-deep);font-weight:800;font-size:12.5px}
+.flaw .detail .row.real .lab{color:var(--ok)}
+.flaw .detail .row b{color:var(--ink)}
+
+/* 改前→改后（复用落地页 .ba） */
+.ba{display:grid;grid-template-columns:1fr auto 1fr;align-items:stretch;gap:0;margin-top:18px}
+.ba-col{background:var(--card);border:1px solid var(--line);padding:22px;box-shadow:var(--shadow)}
+.ba-col.before{border-radius:var(--r) 0 0 var(--r);border-right:0}
+.ba-col.after{border-radius:0 var(--r) var(--r) 0;border-left:0;background:linear-gradient(180deg,#fffdf8,var(--card))}
+.ba-arrow{display:flex;align-items:center;justify-content:center;width:46px;background:var(--card);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);color:var(--accent);font-size:20px;font-weight:800}
+.ba-tag{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;display:inline-flex;align-items:center;gap:7px}
+.ba-col.before .ba-tag{color:var(--faint)} .ba-col.after .ba-tag{color:var(--accent-deep)}
+.ba-tag .pill{font-size:11px;padding:1px 8px;border-radius:999px}
+.before .ba-tag .pill{background:var(--bad-soft);color:var(--bad)}
+.after .ba-tag .pill{background:#e7f1e3;color:var(--ok)}
+.ba-words span{display:inline-block;font-size:13px;color:var(--mut);margin:0 8px 7px 0;padding-bottom:2px;border-bottom:1px dashed var(--line);text-decoration:line-through;text-decoration-color:var(--faint)}
+.ba-verdict{margin-top:12px;font-size:13px;color:var(--bad);font-weight:700}
+.ba-punch{font-family:var(--titlefont);font-size:22px;font-weight:800;color:var(--ink);line-height:1.4;margin:2px 0 6px}
+.ba-punch b{color:var(--accent);box-shadow:inset 0 -10px 0 var(--accent-soft)}
+.ba-meta{font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.75}
+.ba-meta b{color:var(--ink)}
+.ba-supports{margin:10px 0 0;list-style:none;display:grid;gap:6px}
+.ba-supports li{font-size:13px;color:var(--mut);padding-left:18px;position:relative;line-height:1.6}
+.ba-supports li::before{content:"▸";position:absolute;left:0;color:var(--accent)}
+.ba-ok{margin-top:12px;font-size:12px;color:var(--ok);font-weight:700}
+
+/* 成品（可折叠） */
+.product{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.product summary{list-style:none;cursor:pointer;padding:18px 22px;display:flex;align-items:center;gap:12px;font-weight:800;font-size:16px}
+.product summary::-webkit-details-marker{display:none}
+.product summary .chev{margin-left:auto;color:var(--faint);transition:.2s}
+.product[open] summary .chev{transform:rotate(90deg)}
+.product .pin{font-size:11px;font-weight:800;color:var(--ok);background:var(--ok-soft);border-radius:999px;padding:3px 10px}
+.product .pbody{padding:0 22px 22px;border-top:1px solid var(--line);margin-top:-2px}
+.product .ptitle{font-family:var(--titlefont);font-size:19px;font-weight:800;margin:18px 0 12px;line-height:1.4}
+.product .pbody p{font-size:14.5px;color:var(--mut);margin:10px 0;line-height:1.85}
+.product .pbody p b{color:var(--ink)}
+.product .pbody ul{list-style:none;margin:12px 0}
+.product .pbody li{font-size:14px;color:var(--mut);padding:6px 0 6px 22px;position:relative;line-height:1.7}
+.product .pbody li::before{content:"";position:absolute;left:4px;top:15px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.product .pbody li b{color:var(--ink)}
+.product .pcheck{margin-top:14px;font-size:12.5px;color:var(--ok);font-weight:700;background:var(--ok-soft);border-radius:10px;padding:11px 15px;line-height:1.6}
+.product .pnote{margin-top:12px;font-size:12px;color:var(--faint);font-style:italic;line-height:1.7}
+
+/* 署名 + 免责 */
+.sign-card{margin-top:34px;background:var(--ink);color:#fff;border-radius:var(--r);padding:24px 26px;display:flex;align-items:center;gap:14px}
+.sign-card img{width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(255,255,255,.45);flex:none}
+.sign-card .barbar{width:5px;height:40px;border-radius:3px;background:var(--accent);flex:none}
+.sign-card .st{line-height:1.4}
+.sign-card .st b{display:block;font-size:15px;font-weight:800}
+.sign-card .st span{display:block;font-size:12px;color:rgba(255,255,255,.7)}
+.sign-card .tl{margin-left:auto;text-align:right;font-size:12.5px;color:rgba(255,255,255,.8);font-weight:600;max-width:14em;line-height:1.5}
+.foot{text-align:center;color:var(--faint);font-size:12px;margin-top:20px;line-height:1.8}
+.foot .ck{color:var(--mut);font-weight:600}
+
+@media(max-width:680px){
+  .hero h1{font-size:27px}
+  .verdict{flex-direction:column;align-items:flex-start;gap:14px}
+  .ba{grid-template-columns:1fr}
+  .ba-col.before{border-radius:var(--r) var(--r) 0 0;border:1px solid var(--line);border-bottom:0}
+  .ba-col.after{border-radius:0 0 var(--r) var(--r);border:1px solid var(--line);border-top:0}
+  .ba-arrow{width:auto;height:40px;border:1px solid var(--line);border-left:0;border-right:0;transform:rotate(90deg)}
+  .flaw .detail{padding-left:20px}
+  .iptag{position:static;justify-content:flex-end;margin-top:42px}
+  .sign-card{flex-wrap:wrap}.sign-card .tl{margin-left:0;text-align:left;max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+
+<script>
+// ===== 出厂默认（虚构络平宁；被 REPORT_DATA 整体覆盖，避免逐字段渗透）=====
+const DEFAULT = {
+  meta:{ chrome:"关键信息体检", category:"络平宁（虚构）· 原发性高血压", tier:"标准档", source:"示例", date:"2026-06" },
+  verdict:{ grade:"不及格", oneline:"把产品名换成任意一个降压药，这几句话全部成立——这不是定位，是一张优等生评语；而且踩了合规红线。" },
+  flaws:[
+    { quote:"全面平稳降压", problem:"“全面”=没重点", realMeaning:"平稳在哪个时段？清晨？夜间？" },
+    { quote:"卓越疗效 / 理想之选", problem:"绝对化宣称（合规红线）", realMeaning:"删，改成有边界的表述", compliance:true },
+    { quote:"优异安全", problem:"“优异”在哪个指标没说", realMeaning:"医生关心的具体安全点是什么" },
+    { quote:"开启降压新时代", problem:"空泛抒情", realMeaning:"删" }
+  ],
+  before:{ grade:"不及格", items:["全面平稳降压","卓越疗效（绝对化·合规雷）","优异安全 / 理想之选 / 开启新时代"], note:"战场缺失 · 口号堆砌无主线" },
+  after:{ grade:"优秀", main:"单片复方：一片，盯住清晨那一峰",
+    supports:["盯得住：24h 平稳降压，覆盖清晨时段","记得住：多片简化为每日一片，减少漏服","适合谁：清晨控制不佳、多药依从差的病人"],
+    oneliner:"「一片，管住清晨那一峰」",
+    field:"清晨血压控制不佳、多药联用、依从性差的病人", main_one:"单片复方——一片管全天，盯住清晨那一峰。" },
+  product:{
+    title:"血压达标了，可病人记得吃药吗？——络平宁与“清晨那一峰”",
+    body:[
+      {t:"p", h:"多药联用能把血压压下来，但真正的漏洞常常在两处：<b>病人忘了吃、以及清晨那一峰没盯住。</b>"},
+      {t:"p", h:"络平宁是单片复方降压方案，定位很明确——<b>把“多片”简化为“一片”，把控制重点放在清晨血压。</b>"},
+      {t:"ul", items:[
+        "<b>盯得住</b>：24 小时平稳降压，覆盖清晨高危时段 <code>[数据 / 出处占位]</code>。",
+        "<b>记得住</b>：由多片简化为每日一片 <code>[依从性数据 / 出处占位]</code>，减少漏服。",
+        "<b>适合谁</b>：尤其适合清晨血压控制不佳、多药联用依从性差的病人。"
+      ]},
+      {t:"p", h:"当病人说“药太多记不住”，您可以告诉他：<b>「一片，管住清晨那一峰。」</b>"}
+    ],
+    checklist:"0 绝对化宣称 · 适应症精确 · 数据带出处占位 · 未贬低竞品 · 给了医生可落地的一句话。",
+    note:"适应症：原发性高血压。疗效与安全性数据详见产品说明书；对外材料须经 MA/RA 审核。"
+  },
+  brand:"MKTer 小V", brandTag:"一起进化",
+  tagline:"整理交给 agent，判断留给自己",
+  avatar:"", // render-report.mjs 注入 base64 data URL；空则显示竖条
+  footer:"全是虚构样例，只用公开资料；判断和最终拍板都还在人手里，对外发布前过 MA / RA。"
+};
+
+const d = window.REPORT_DATA || DEFAULT;
+const m = d.meta||{}, v = d.verdict||{}, b = d.before||{}, a = d.after||{}, p = d.product||{};
+const esc = s => String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+// 成品正文允许少量内联标签（<b>/<code>），故不转义——内容来自体检引擎自身产出，非用户任意输入
+const gradeCls = g => ({"不及格":"v-bad","及格":"v-pass","良好":"v-good","优秀":"v-top"}[g]||"v-pass");
+
+let H = "";
+
+// IP 角标
+H += `<div class="iptag"><div class="tx"><b>${esc(d.brand||"MKTer 小V")}</b><span>${esc(d.brandTag||"一起进化")}</span></div><span class="dot"></span></div>`;
+
+// HERO + 元数据
+H += `<header class="hero">
+  <span class="kicker">关键信息体检报告</span>
+  <h1>${esc(m.category||"")}</h1>
+  <div class="metabar">
+    ${m.chrome?`<span>${esc(m.chrome)}</span>`:""}
+    ${m.tier?`<span><b>档位</b> ${esc(m.tier)}</span>`:""}
+    ${m.date?`<span><b>日期</b> ${esc(m.date)}</span>`:""}
+    ${m.source?`<span><b>来源</b> ${esc(m.source)}</span>`:""}
+  </div>
+</header>`;
+
+// 评级（结论先行）
+H += `<section class="sec">
+  <div class="sec-k">体检评级</div>
+  <div class="verdict">
+    <div class="badge ${gradeCls(v.grade)}">${esc(v.grade||"")}</div>
+    <div class="diag">${esc(v.oneline||"")}</div>
+  </div>
+</section>`;
+
+// 逐条挑刺 accordion
+if (d.flaws && d.flaws.length){
+  H += `<section class="sec"><div class="sec-k">逐条挑刺 · 指到原句</div>
+    <h2>每一条，都指到你写的那一句</h2>
+    <p class="sub">点开看：这句的问题，和它其实想说什么。标红 = 合规红线，先拦截再产出。</p>
+    <div class="flaws">`;
+  d.flaws.forEach((f,i)=>{
+    H += `<details class="flaw ${f.compliance?"cmp":""}" ${i===0?"open":""}>
+      <summary>
+        <span class="qmark">${f.compliance?"!":(i+1)}</span>
+        <span class="quote">「<span class="q">${esc(f.quote)}</span>」</span>
+        ${f.compliance?`<span class="tagm">合规红线</span>`:""}
+        <span class="chev">▸</span>
+      </summary>
+      <div class="detail">
+        <div class="row"><span class="lab">问题</span>${esc(f.problem)}</div>
+        <div class="row real"><span class="lab">其实想说</span>${esc(f.realMeaning)}</div>
+      </div>
+    </details>`;
+  });
+  H += `</div></section>`;
+}
+
+// 改前 → 改后
+H += `<section class="sec"><div class="sec-k">改前 → 改后</div>
+  <h2>同一条 message，体检前后</h2>
+  <div class="ba">
+    <div class="ba-col before">
+      <div class="ba-tag">改前 <span class="pill">${esc(b.grade||"不及格")}</span></div>
+      <div class="ba-words">${(b.items||[]).map(t=>`<span>${esc(t)}</span>`).join("")}</div>
+      ${b.note?`<div class="ba-verdict">${esc(b.note)}</div>`:""}
+    </div>
+    <div class="ba-arrow">→</div>
+    <div class="ba-col after">
+      <div class="ba-tag">改后 <span class="pill">${esc(a.grade||"优秀")}</span></div>
+      ${a.oneliner?`<div class="ba-punch">「<b>${esc(a.oneliner.replace(/^「|」$/g,""))}</b>」</div>`:""}
+      <div class="ba-meta">
+        ${a.field?`<b>选战场</b>：${esc(a.field)}<br>`:""}
+        ${(a.main_one||a.main)?`<b>主信息</b>：${esc(a.main_one||a.main)}`:""}
+      </div>
+      ${(a.supports&&a.supports.length)?`<ul class="ba-supports">${a.supports.map(s=>`<li>${esc(s)}</li>`).join("")}</ul>`:""}
+      <div class="ba-ok">✅ 合规自检：${esc(p.checklist||"零绝对化宣称 · 适应症精确 · 数据带出处占位 · 未贬竞品 · 给了医生能落地的一句话。")}</div>
+    </div>
+  </div>
+</section>`;
+
+// 成品（可折叠）
+if (p.title){
+  let pb = "";
+  (p.body||[]).forEach(blk=>{
+    if(blk.t==="ul") pb += `<ul>${(blk.items||[]).map(li=>`<li>${li}</li>`).join("")}</ul>`;
+    else pb += `<p>${blk.h||""}</p>`;
+  });
+  H += `<section class="sec"><div class="sec-k">成品 · 面向医生的产品优势介绍</div>
+    <details class="product" open>
+      <summary>据改写后的信息，写成医生愿意读的一篇 <span class="pin">已过合规</span><span class="chev">▸</span></summary>
+      <div class="pbody">
+        <div class="ptitle">${esc(p.title)}</div>
+        ${pb}
+        ${p.checklist?`<div class="pcheck">✅ 合规自检：${esc(p.checklist)}</div>`:""}
+        ${p.note?`<div class="pnote">（${esc(p.note)}）</div>`:""}
+      </div>
+    </details>
+  </section>`;
+}
+
+// 署名卡 + 免责
+H += `<div class="sign-card">
+  ${d.avatar?`<img src="${d.avatar}" alt="${esc(d.brand||"MKTer 小V")}">`:`<div class="barbar"></div>`}
+  <div class="st"><b>${esc(d.brand||"MKTer 小V")}</b><span>${esc(d.brandTag||"一起进化")}</span></div>
+  <div class="tl">${esc(d.tagline||"整理交给 agent，判断留给自己")}</div>
+</div>
+<div class="foot">
+  <div class="ck">医药市场部 · 10 年 · 个人作品，不代表任何雇主</div>
+  ${esc(d.footer||"全是虚构样例，只用公开资料；判断和最终拍板都还在人手里，对外发布前过 MA / RA。")}
+</div>`;
+
+document.getElementById("root").innerHTML = H;
+</script>
+</body>
+</html>

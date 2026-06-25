@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="zh-CN" data-accent="ikb">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>关键信息体检 · 改前 vs 改后 对比卡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  /* ===== Guizang Swiss 视觉系统（精简自 guizang-social-card 种子模板）=====
+     数据驱动：render 时注入 window.CARD_DATA，JS 构建 .poster 内容。
+     强调色切换：<html data-accent="ikb | safety-orange | lemon-green | lemon-yellow"> */
+  :root, [data-accent="ikb"] {
+    --paper:#fafaf8; --ink:#0a0a0a; --grey-1:#f0f0ee; --grey-2:#d4d4d2; --grey-3:#737373;
+    --accent:#002FA7; --accent-on:#ffffff;
+  }
+  [data-accent="safety-orange"] { --paper:#fafaf8;--ink:#0a0a0a;--grey-1:#f0f0ee;--grey-2:#d4d4d2;--grey-3:#737373;--accent:#FF6B35;--accent-on:#ffffff; }
+  [data-accent="lemon-green"]   { --paper:#fafaf8;--ink:#0a0a0a;--grey-1:#f0f0ee;--grey-2:#d4d4d2;--grey-3:#737373;--accent:#C5E803;--accent-on:#0a0a0a; }
+  [data-accent="lemon-yellow"]  { --paper:#fafaf8;--ink:#0a0a0a;--grey-1:#f0f0ee;--grey-2:#d4d4d2;--grey-3:#737373;--accent:#FFD500;--accent-on:#0a0a0a; }
+
+  :root {
+    --sans:"Inter","Helvetica Neue",Helvetica,"Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei UI",sans-serif;
+    --sans-zh:"Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei UI","Inter",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Consolas,monospace;
+    --sp-3:8px;--sp-4:12px;--sp-5:16px;--sp-6:24px;--sp-7:32px;--sp-8:40px;--sp-9:48px;--sp-11:80px;--sp-12:96px;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:#1a1a1a;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;}
+
+  .poster{position:relative;background:var(--paper);color:var(--ink);overflow:hidden;}
+  .poster.xhs{width:1080px;height:1440px;}
+  .poster.xhs .content{padding:var(--sp-12) var(--sp-11);}
+  .content{position:relative;width:100%;height:100%;display:flex;flex-direction:column;}
+
+  /* 字阶（Swiss：越大越细）*/
+  .h-xl{font-family:var(--sans);font-weight:300;font-size:84px;line-height:1.08;letter-spacing:-.01em;margin:0;color:var(--ink);}
+  .h-md{font-family:var(--sans-zh);font-weight:500;font-size:48px;line-height:1.22;margin:0;color:var(--ink);}
+  .lead{font-family:var(--sans-zh);font-weight:400;font-size:30px;line-height:1.55;color:var(--ink);margin:0;}
+  .body{font-family:var(--sans-zh);font-weight:400;font-size:28px;line-height:1.6;color:var(--ink);margin:0;}
+  .t-cat{font-family:var(--sans-zh);font-weight:600;font-size:24px;letter-spacing:.04em;color:var(--accent);margin:0;}
+  .t-meta{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-3);margin:0;}
+  .num-xl{font-family:var(--sans);font-weight:200;font-size:120px;line-height:.96;letter-spacing:-.02em;margin:0;color:var(--ink);}
+
+  .stack{display:flex;flex-direction:column;}
+  .row{display:flex;flex-direction:row;}
+  .gap-3{gap:var(--sp-3);}.gap-4{gap:var(--sp-4);}.gap-5{gap:var(--sp-5);}.gap-6{gap:var(--sp-6);}.gap-7{gap:var(--sp-7);}
+  .grow{flex:1;}
+  .items-center{align-items:center;}.items-baseline{align-items:baseline;}
+  .hr-accent{height:3px;background:var(--accent);border:0;width:96px;margin:0;}
+
+  .card-ink{background:var(--ink);color:var(--paper);padding:var(--sp-7);}
+  .card-ink .lead,.card-ink .body,.card-ink .h-md{color:var(--paper);}
+  .card-accent{background:var(--accent);color:var(--accent-on);padding:var(--sp-7);}
+  .card-accent .h-md,.card-accent .t-meta,.card-accent .num-xl,.card-accent .lead{color:var(--accent-on);}
+  .card-fill{background:var(--grey-1);color:var(--ink);padding:var(--sp-7);}
+  /* C 区隔：改后做成淡强调色底块（与改前灰底并列）*/
+  .after-fill{background:color-mix(in srgb,var(--accent) 8%,#ffffff);padding:var(--sp-7);}
+
+  .chrome-min{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:18px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-3);padding-bottom:var(--sp-6);border-bottom:1px solid var(--grey-2);}
+
+  /* 任务专属 */
+  .kix-tag{font-family:var(--mono);font-weight:600;font-size:20px;letter-spacing:.14em;text-transform:uppercase;}
+  .kix-grade{font-family:var(--sans-zh);font-weight:600;font-size:24px;padding:6px 18px;line-height:1;}
+  .g-pass{background:var(--grey-2);color:var(--ink);}
+  .g-top{background:var(--accent);color:var(--accent-on);}
+  .strike{text-decoration:line-through;text-decoration-color:var(--grey-3);color:var(--grey-3);}
+  .support{margin:0;font-family:var(--sans-zh);font-weight:400;font-size:28px;line-height:1.6;color:var(--ink);padding-left:30px;position:relative;}
+  .support::before{content:"▸";position:absolute;left:0;color:var(--accent);}
+  /* 个人 IP 品牌签名（仅传 brand 字段时显示；竞品分析卡不传=不显示）*/
+  .brand-sig{margin-top:var(--sp-5);padding-top:var(--sp-7);border-top:1px solid var(--grey-2);align-items:stretch;}
+  .brand-bar{width:6px;background:var(--accent);flex:none;}
+  .brand-ava{width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);flex:none;}
+  .brand-lines{justify-content:center;}
+  .brand-name{font-family:var(--sans-zh);font-weight:700;font-size:30px;letter-spacing:.02em;color:var(--ink);}
+  .brand-series{font-family:var(--mono);font-weight:500;font-size:18px;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-3);}
+  .brand-tag{font-family:var(--mono);font-weight:500;font-size:20px;letter-spacing:.1em;color:var(--grey-3);}
+</style>
+</head>
+<body>
+  <section class="poster xhs" id="card">
+    <div class="content gap-5" id="card-content"></div>
+  </section>
+
+<script>
+  // 默认数据（出厂安全：虚构产品，可被 render 注入的 CARD_DATA 覆盖）
+  const DEFAULT = {
+    accent: "ikb",
+    chromeLeft: "关键信息体检", chromeRight: "KEY MESSAGE 体检",
+    category: "某降压药 · 原发性高血压",
+    hook: "改前 → 改后",
+    before: {
+      grade: "不及格",
+      items: ["全面平稳降压", "卓越疗效（绝对化·合规雷）", "优异安全 / 理想之选 / 开启新时代"],
+      note: "战场缺失 · 口号堆砌无主线 ↓"
+    },
+    after: {
+      grade: "优秀",
+      main: "单片复方：一片，盯住清晨那一峰",
+      supports: [
+        "盯得住：24h 平稳降压，覆盖清晨时段",
+        "记得住：多片简化为每日一片，减少漏服",
+        "适合谁：清晨控制不佳、多药依从差的病人"
+      ],
+      oneliner: "「一片，管住清晨那一峰」"
+    },
+    brand: "MKTer 小V",
+    brandSeries: "",
+    brandTag: "一起进化",
+    footer: ""
+  };
+
+  // 有 CARD_DATA 就整体用它（避免默认值逐字段渗透）；完全没传才用虚构默认
+  const d = window.CARD_DATA || DEFAULT;
+  const b = d.before || {};
+  const a = d.after || {};
+
+  document.documentElement.setAttribute("data-accent", d.accent || "ikb");
+
+  const esc = s => String(s == null ? "" : s).replace(/[&<>]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[c]));
+  const el = (cls, txt) => `<p class="${cls}">${esc(txt)}</p>`;
+
+  let html = "";
+  html += `<div class="chrome-min"><span>${esc(d.chromeLeft || "关键信息体检")}</span><span>${esc(d.chromeRight || "KEY MESSAGE 体检")}</span></div>`;
+  html += `<div class="stack gap-5">`
+        +   el("t-cat", d.category || "")
+        +   `<h1 class="h-xl">${esc(d.hook || "改前 → 改后")}</h1>`
+        + `</div>`;
+
+  // 改前块
+  html += `<div class="card-fill stack gap-5">`
+        +   `<div class="row gap-5 items-center"><span class="kix-tag" style="color:var(--grey-3)">改前 BEFORE</span><span class="kix-grade g-pass">${esc(b.grade)}</span></div>`
+        +   `<div class="stack gap-4">` + (b.items || []).map(t => el("body strike", t)).join("") + `</div>`
+        +   (b.note ? el("t-meta", b.note) : "")
+        + `</div>`;
+
+  // 改后块
+  let after = `<div class="stack gap-6 after-fill">`
+        +   `<div class="row gap-5 items-center"><span class="kix-tag" style="color:var(--accent)">改后 AFTER</span><span class="kix-grade g-top">${esc(a.grade)}</span></div>`;
+  if (a.diamond && a.diamond.num) {
+    after += `<div class="card-accent row gap-6 items-baseline">`
+          +    `<p class="num-xl">${esc(a.diamond.num)}</p>`
+          +    `<div class="stack gap-3">` + (a.diamond.unit ? `<p class="h-md">${esc(a.diamond.unit)}</p>` : "")
+          +      (a.diamond.note ? `<p class="t-meta" style="opacity:.85">${esc(a.diamond.note)}</p>` : "") + `</div>`
+          +  `</div>`;
+  }
+  if (a.main) after += `<p class="h-md">${esc(a.main)}</p>`;
+  if (a.supports && a.supports.length) after += `<div class="stack gap-4">` + a.supports.map(t => el("support", t)).join("") + `</div>`;
+  if (a.oneliner) after += `<div class="card-accent"><p class="lead">${esc(a.oneliner)}</p></div>`;
+  after += `</div>`;
+  html += after;
+
+  html += `<div class="grow"></div>`;
+  // 个人 IP 品牌签名（仅当传入 brand 时渲染；竞品分析卡不传 brand = 不署名）
+  if (d.brand) {
+    const series = d.brandSeries ? ` <span class="brand-series">· ${esc(d.brandSeries)}</span>` : "";
+    html += `<div class="brand-sig row gap-5">`
+          +   (d.avatar ? `<img class="brand-ava" src="${esc(d.avatar)}" alt="">` : `<div class="brand-bar"></div>`)
+          +   `<div class="brand-lines stack gap-3">`
+          +     `<span class="brand-name">${esc(d.brand)}${series}</span>`
+          +     (d.brandTag ? `<span class="brand-tag">${esc(d.brandTag)}</span>` : "")
+          +   `</div>`
+          + `</div>`;
+  }
+  if (d.footer) html += el("t-meta", d.footer);  // 合规小字可选：传 footer 才显示
+
+  document.getElementById("card-content").innerHTML = html;
+</script>
+</body>
+</html>

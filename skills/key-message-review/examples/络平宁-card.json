@@ -1,0 +1,31 @@
+{
+  "accent": "ikb",
+  "chromeLeft": "关键信息体检 · 示例",
+  "chromeRight": "KEY MESSAGE 体检",
+  "category": "络平宁(虚构) · 原发性高血压",
+  "hook": "改前 → 改后",
+  "before": {
+    "grade": "不及格",
+    "items": [
+      "全面平稳降压",
+      "卓越疗效（绝对化 · 合规雷）",
+      "优异安全 / 理想之选 / 开启新时代"
+    ],
+    "note": "战场缺失 · 口号堆砌无主线 ↓"
+  },
+  "after": {
+    "grade": "优秀",
+    "main": "单片复方：一片，盯住清晨那一峰",
+    "supports": [
+      "盯得住：24h 平稳降压，覆盖清晨时段",
+      "记得住：多片简化为每日一片，减少漏服",
+      "适合谁：清晨控制不佳、多药依从差的病人"
+    ],
+    "oneliner": "「一片，管住清晨那一峰」"
+  },
+  "avatar": "file:///Users/vera/Documents/MKTer小V事业/brand/xhs-avatar.png",
+  "brand": "MKTer 小V",
+  "brandSeries": "",
+  "brandTag": "一起进化",
+  "footer": ""
+}

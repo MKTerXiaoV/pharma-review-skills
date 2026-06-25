@@ -1,0 +1,28 @@
+{
+  "accent": "lemon-green",
+  "chromeLeft": "业务分析体检 · 示例",
+  "chromeRight": "ANALYSIS 体检",
+  "category": "某 PD-1 抑制剂(虚构) · Q3 区域汇报",
+  "hook": "改前 → 改后",
+  "before": {
+    "grade": "未及格线",
+    "items": [
+      "Q3 +12% 超额 →「全区加码」",
+      "只看了自己涨了多少",
+      "没看市场/份额/过程"
+    ],
+    "note": "涨了就以为赢了 ↓"
+  },
+  "after": {
+    "grade": "良好",
+    "supports": [
+      "市场+18%>你+12% → 份额24→22 在丢",
+      "12%靠存量加量·新医院0 → 明年断崖",
+      "真问题=拓新乏力,不是加码"
+    ],
+    "note": "涨≠赢 · 读透了真问题"
+  },
+  "brand": "MKTer 小V",
+  "brandSeries": "业务分析体检系列",
+  "brandTag": "MKTer 小V · 一起进化"
+}
