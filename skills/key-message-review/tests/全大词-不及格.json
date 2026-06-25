@@ -1,0 +1,21 @@
+{
+  "meta": { "chrome": "关键信息体检", "category": "（虚构示例）· 全大词不及格用例", "tier": "速检", "source": "回归测试", "date": "2026-06" },
+  "verdict": { "grade": "不及格", "oneline": "五句全是换个产品名也成立的口号，且多处绝对化宣称——先拦合规再谈改写。" },
+  "flaws": [
+    { "quote": "全球领先", "problem": "绝对化宣称", "realMeaning": "删，没有边界的“领先”不合规", "compliance": true },
+    { "quote": "彻底治愈", "problem": "绝对化 + 疗效越界", "realMeaning": "删，处方药不做根治承诺", "compliance": true },
+    { "quote": "最佳选择", "problem": "绝对化宣称", "realMeaning": "删，改成有适用人群边界的表述", "compliance": true },
+    { "quote": "卓越疗效优异安全", "problem": "大词堆砌，无具体指标", "realMeaning": "疗效卓越在哪个终点？安全优异在哪个事件？" },
+    { "quote": "开启治疗新纪元", "problem": "空泛抒情", "realMeaning": "删" }
+  ],
+  "before": { "grade": "不及格", "items": ["全球领先", "彻底治愈", "最佳选择 / 卓越疗效 / 开启新纪元"], "note": "多重绝对化 · 一票否决" },
+  "after": {
+    "grade": "—",
+    "oneliner": "先过合规，再谈改写",
+    "field": "（合规未过，暂不输出改写战场）",
+    "main_one": "命中多条绝对化红线，按红线规则先全部拦截、要求提供可支撑的有边界表述后再改。",
+    "supports": []
+  },
+  "product": null,
+  "brand": "MKTer 小V", "brandTag": "一起进化"
+}

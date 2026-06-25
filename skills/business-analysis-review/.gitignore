@@ -1,0 +1,15 @@
+# 内部产物：不随产品分发
+_private/
+EXTEND.md
+HANDOFF.md
+设计预览.html
+tests/results-*
+
+# 渲染产物（默认不收 png；但放行示例 demo 图，README 要用）
+*.png
+!examples/区域分析-可视对比.png
+!examples/区域分析-对比卡.png
+node_modules/
+
+# 系统
+.DS_Store
