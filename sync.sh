@@ -1,8 +1,8 @@
 #!/bin/bash
-# 从 3 个独立仓重建 skills/(独立仓是唯一源头,改完跑这个再 push 全家桶)
+# 从 5 个独立仓重建 skills/(独立仓是唯一源头,改完跑这个再 push 全家桶)
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
-for s in evidence-review key-message-review activity-design-review business-analysis-review; do
+for s in evidence-review business-analysis-review insight-review key-message-review activity-design-review; do
   rm -rf "$HERE/skills/$s"
   git clone -q --depth 1 "https://github.com/MKTerXiaoV/$s" "$HERE/skills/$s"
   rm -rf "$HERE/skills/$s/.git"
