@@ -1,7 +1,21 @@
 // 业务分析体检 · 可视化改前→改后(深案例"涨了≠你赢了" · baoyu craft · 价值口径)
 // 用法:node scripts/render-viz.mjs <data.json> <out.png>
-import { chromium } from '/Users/vera/.claude/skills/guizang-social-card-skill/node_modules/playwright/index.mjs';
 import { readFileSync } from 'fs';
+// 解析 playwright：先试本地安装的裸包，再试 skill 目录里的，最后试 guizang 卡片 skill 自带的（都没有就提示安装）
+const { chromium } = await (async () => {
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const here = new URL(".", import.meta.url);
+  const specs = [
+    "playwright",
+    new URL("../node_modules/playwright/index.mjs", here).href,
+    home && (await import("node:url")).pathToFileURL(`${home}/.claude/skills/guizang-social-card-skill/node_modules/playwright/index.mjs`).href,
+  ].filter(Boolean);
+  for (const s of specs) { try { const m = await import(s); if (m.chromium) return m; } catch {} }
+  console.error("缺少 playwright。请先安装：\n  npm i -D playwright && npx playwright install chromium");
+  process.exit(1);
+})();
+// 优先用 playwright 自带的 chromium，没装就用系统 Chrome
+const launch = async (opts = {}) => { try { return await chromium.launch(opts); } catch { return await chromium.launch({ ...opts, channel: "chrome" }); } };
 const [,, dataPath, outPath] = process.argv;
 const d = JSON.parse(readFileSync(dataPath, 'utf8'));
 const ava = (()=>{ try { return 'data:image/png;base64,'+readFileSync(new URL('../assets/avatar.png', import.meta.url)).toString('base64'); } catch { return ''; } })();
@@ -83,7 +97,7 @@ body{width:${W}px;height:${H}px;background:#F5F0E6;position:relative;
   <div class="gh">开源 Skill「业务分析体检」<br>GitHub 搜 <b>MKTerXiaoV</b></div>
  </div>
 </div></body></html>`;
-const br=await chromium.launch({executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',args:['--no-sandbox']});
+const br=await launch({args:['--no-sandbox']});
 const pg=await br.newPage({viewport:{width:W,height:H},deviceScaleFactor:2});
 await pg.setContent(html,{waitUntil:'load'}); await pg.waitForTimeout(300);
 await pg.screenshot({path:outPath});

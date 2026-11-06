@@ -3,7 +3,7 @@
  * render-card-v2.mjs — 自包含"改前 vs 改后"对比卡 (Swiss 风, 头像 base64 内嵌, 不依赖 guizang 模板)
  *   node scripts/render-card-v2.mjs <data.json> <out.png>
  * data.json 同 render-card.mjs (accent/chromeLeft/chromeRight/category/hook/before/after/brand/brandTag/footer)
- * 头像固定取 ~/Documents/MKTer小V事业/brand/xhs-avatar-sm.png, base64 内嵌, 始终显示。
+ * 头像依次取 skill 目录 assets/avatar.png、环境变量 PR_AVATAR 指向的图片, base64 内嵌; 都没有就不显示。
  */
 import fs from "node:fs";
 
@@ -11,8 +11,8 @@ const [dataPath, outPath = "card.png"] = process.argv.slice(2);
 if (!dataPath) { console.error("用法: node render-card-v2.mjs <data.json> <out.png>"); process.exit(1); }
 const d = JSON.parse(fs.readFileSync(dataPath, "utf8"));
 
-const AVA = "/Users/vera/Documents/MKTer小V事业/brand/xhs-avatar-sm.png";
-const avaB64 = fs.existsSync(AVA) ? "data:image/png;base64," + fs.readFileSync(AVA).toString("base64") : "";
+const AVA = [new URL("../assets/avatar.png", import.meta.url), process.env.PR_AVATAR].find((f) => f && fs.existsSync(f));
+const avaB64 = AVA ? "data:image/png;base64," + fs.readFileSync(AVA).toString("base64") : "";
 
 const ACCENTS = { "ikb":"#1B50C8", "safety-orange":"#E8943A", "lemon-green":"#8CA80E", "lemon-yellow":"#C9A227" };
 const accent = ACCENTS[d.accent] || "#E8943A";
@@ -74,9 +74,22 @@ const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><sty
   ${d.footer?`<div class="foot">${esc(d.footer)}</div>`:""}
 </div></body></html>`;
 
-const PW="/Users/vera/.claude/skills/guizang-social-card-skill/node_modules/playwright/index.mjs";
-const { chromium } = await import(PW);
-let br; try{br=await chromium.launch();}catch{br=await chromium.launch({executablePath:"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"});}
+// 解析 playwright：先试本地安装的裸包，再试 skill 目录里的，最后试 guizang 卡片 skill 自带的（都没有就提示安装）
+const { chromium } = await (async () => {
+  const home = process.env.HOME || process.env.USERPROFILE || "";
+  const here = new URL(".", import.meta.url);
+  const specs = [
+    "playwright",
+    new URL("../node_modules/playwright/index.mjs", here).href,
+    home && (await import("node:url")).pathToFileURL(`${home}/.claude/skills/guizang-social-card-skill/node_modules/playwright/index.mjs`).href,
+  ].filter(Boolean);
+  for (const s of specs) { try { const m = await import(s); if (m.chromium) return m; } catch {} }
+  console.error("缺少 playwright。请先安装：\n  npm i -D playwright && npx playwright install chromium");
+  process.exit(1);
+})();
+// 优先用 playwright 自带的 chromium，没装就用系统 Chrome
+const launch = async (opts = {}) => { try { return await chromium.launch(opts); } catch { return await chromium.launch({ ...opts, channel: "chrome" }); } };
+const br = await launch();
 const p = await br.newPage({deviceScaleFactor:2});
 await p.setContent(html,{waitUntil:"load"});
 await p.waitForTimeout(300);
